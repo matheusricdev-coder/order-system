@@ -120,6 +120,7 @@ export interface ProductFilters {
   sortDir?: SortDir;
   perPage?: number;
   page?: number;
+  onlyWithPromotion?: boolean;
 }
 
 export const catalogApi = {
@@ -134,6 +135,7 @@ export const catalogApi = {
     if (filters.sortDir)                 params.set('sortDir', filters.sortDir);
     if (filters.perPage)                 params.set('perPage', String(filters.perPage));
     if (filters.page)                    params.set('page', String(filters.page));
+    if (filters.onlyWithPromotion)       params.set('onlyWithPromotion', '1');
     const qs = params.toString();
     return api.get<PaginatedResponse<Product>>(`/products${qs ? `?${qs}` : ''}`);
   },

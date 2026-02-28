@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
 import CartDrawer from "@/components/CartDrawer";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
@@ -14,6 +15,7 @@ import Product from "./pages/Product";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 import AdminProducts from "./pages/admin/AdminProducts";
 import AdminStock from "./pages/admin/AdminStock";
@@ -32,7 +34,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <CartProvider>
-        <TooltipProvider>
+        <FavoritesProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -42,6 +45,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/products/:id" element={<Product />} />
+              <Route path="/favorites" element={<Favorites />} />
 
               {/* ── Authenticated ───────────────────────────────────────── */}
               <Route
@@ -75,7 +79,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </FavoritesProvider>
       </CartProvider>
     </AuthProvider>
   </QueryClientProvider>

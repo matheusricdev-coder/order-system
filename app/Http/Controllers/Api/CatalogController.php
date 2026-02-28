@@ -16,7 +16,7 @@ final class CatalogController extends Controller
     {
         $validated = $request->validated();
 
-        $query = ProductModel::query()->with(['gallery', 'category', 'company']);
+        $query = ProductModel::query()->with(['gallery', 'category', 'company', 'activePromotion']);
 
         // ── Filters ───────────────────────────────────────────────────────────
         if (!empty($validated['categoryId'])) {
@@ -38,6 +38,10 @@ final class CatalogController extends Controller
 
         if (!empty($validated['maxPrice'])) {
             $query->where('price_amount', '<=', (int) $validated['maxPrice']);
+        }
+
+        if (!empty($validated['onlyWithPromotion'])) {
+            $query->whereHas('activePromotion');
         }
 
         // ── Sorting ───────────────────────────────────────────────────────────
@@ -71,7 +75,7 @@ final class CatalogController extends Controller
 
     public function show(string $id): JsonResponse
     {
-        $product = ProductModel::query()->with(['gallery', 'category', 'company'])->findOrFail($id);
+        $product = ProductModel::query()->with(['gallery', 'category', 'company', 'activePromotion'])->findOrFail($id);
 
         return response()->json(['data' => $this->toProductDto($product)]);
     }
@@ -93,6 +97,10 @@ final class CatalogController extends Controller
 
     private function toProductDto(ProductModel $product): array
     {
+        $promotion   = $product->relationLoaded('activePromotion') ? $product->activePromotion : null;
+        $priceAmount = $product->price_amount;
+        $discountPct = $promotion?->discount_percentage;
+
         return [
             'id'           => $product->id,
             'name'         => $product->name,
@@ -101,9 +109,16 @@ final class CatalogController extends Controller
             'companyId'    => $product->company_id,
             'companyName'  => $product->relationLoaded('company') ? $product->company?->trade_name : null,
             'price'        => [
-                'amount'   => $product->price_amount,
+                'amount'   => $priceAmount,
                 'currency' => $product->price_currency,
             ],
+            'promotion' => $promotion ? [
+                'id'                 => $promotion->id,
+                'discountPercentage' => $discountPct,
+                'originalAmount'     => $priceAmount,
+                'discountedAmount'   => (int) round($priceAmount * (1 - $discountPct / 100)),
+                'endsAt'             => $promotion->ends_at->toISOString(),
+            ] : null,
             'images' => $product->relationLoaded('gallery')
                 ? $product->gallery->pluck('url')->values()->all()
                 : [],

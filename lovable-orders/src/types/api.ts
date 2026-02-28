@@ -37,6 +37,13 @@ export interface Product {
   companyId: string;
   companyName: string | null;
   price: Money;
+  promotion: {
+    id: string;
+    discountPercentage: number;
+    originalAmount: number;
+    discountedAmount: number;
+    endsAt: string;
+  } | null;
   images: string[];
 }
 

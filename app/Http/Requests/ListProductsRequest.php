@@ -17,15 +17,16 @@ final class ListProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoryId' => ['sometimes', 'string', 'uuid'],
-            'companyId'  => ['sometimes', 'string', 'uuid'],
-            'q'          => ['sometimes', 'string', 'max:100'],
-            'minPrice'   => ['sometimes', 'integer', 'min:0'],
-            'maxPrice'   => ['sometimes', 'integer', 'min:0', 'gte:minPrice'],
-            'sortBy'     => ['sometimes', 'string', 'in:name,price'],
-            'sortDir'    => ['sometimes', 'string', 'in:asc,desc'],
-            'perPage'    => ['sometimes', 'integer', 'min:1', 'max:50'],
-            'page'       => ['sometimes', 'integer', 'min:1'],
+            'categoryId'         => ['sometimes', 'string', 'uuid'],
+            'companyId'          => ['sometimes', 'string', 'uuid'],
+            'q'                  => ['sometimes', 'string', 'max:100'],
+            'minPrice'           => ['sometimes', 'integer', 'min:0'],
+            'maxPrice'           => ['sometimes', 'integer', 'min:0', 'gte:minPrice'],
+            'sortBy'             => ['sometimes', 'string', 'in:name,price'],
+            'sortDir'            => ['sometimes', 'string', 'in:asc,desc'],
+            'perPage'            => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'page'               => ['sometimes', 'integer', 'min:1'],
+            'onlyWithPromotion'  => ['sometimes', 'boolean'],
         ];
     }
 
