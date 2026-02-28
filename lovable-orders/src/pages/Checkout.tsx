@@ -7,11 +7,13 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
+import { AlertTriangle, RefreshCw, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useCreateOrder, usePayOrder } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { Order } from '@/types/api';
+import { getCheckoutErrorInfo } from '@/lib/errors';
 
 // Load Stripe once outside the component
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string);
@@ -108,7 +110,7 @@ export default function Checkout() {
   const [order, setOrder] = useState<Order | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<unknown>(null);
 
   // On mount: create order then initiate payment intent
   useEffect(() => {
@@ -136,9 +138,9 @@ export default function Checkout() {
         setOrder(payingOrder);
         setClientSecret(payingOrder.clientSecret);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Erro ao iniciar checkout.';
-        setError(msg);
-        toast.error(msg);
+        setCheckoutError(err);
+        const info = getCheckoutErrorInfo(err);
+        toast.error(info.title);
       } finally {
         setIsInitializing(false);
       }
@@ -160,15 +162,62 @@ export default function Checkout() {
     );
   }
 
-  if (error || !order || !clientSecret) {
+  if (checkoutError || !order || !clientSecret) {
+    const info = getCheckoutErrorInfo(checkoutError);
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4 max-w-sm">
-          <p className="text-red-600 font-medium">Erro ao iniciar checkout</p>
-          <p className="text-sm text-muted-foreground">{error}</p>
-          <Button variant="outline" onClick={() => navigate('/')}>
-            Voltar para o catálogo
-          </Button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-sm border max-w-md w-full p-8 text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="bg-amber-100 rounded-full p-4">
+              <AlertTriangle className="h-10 w-10 text-amber-500" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="text-xl font-bold text-gray-900">{info.title}</h1>
+            <p className="text-gray-600 text-sm">{info.description}</p>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg px-4 py-3 text-sm text-blue-700">
+            💡 {info.suggestion}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {info.canRetry && (
+              <Button
+                onClick={() => {
+                  setCheckoutError(null);
+                  setIsInitializing(true);
+                  void (async () => {
+                    try {
+                      const createResponse = await createOrder.mutateAsync(
+                        cartItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+                      );
+                      const createdOrder = createResponse.data;
+                      const payResponse = await payOrder.mutateAsync(createdOrder.id);
+                      const payingOrder = payResponse.data;
+                      if (!payingOrder.clientSecret) throw new Error('Nenhum client secret retornado pelo servidor.');
+                      setOrder(payingOrder);
+                      setClientSecret(payingOrder.clientSecret);
+                    } catch (err: unknown) {
+                      setCheckoutError(err);
+                      toast.error(getCheckoutErrorInfo(err).title);
+                    } finally {
+                      setIsInitializing(false);
+                    }
+                  })();
+                }}
+                className="w-full"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar novamente
+              </Button>
+            )}
+            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+              <ShoppingBag className="h-4 w-4 mr-2" />
+              Voltar ao catálogo
+            </Button>
+          </div>
         </div>
       </div>
     );
