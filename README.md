@@ -232,5 +232,3 @@ Outros arquivos de configuração presentes:
 Este projeto possui uma interface web completa integrada a esta API.
 
 - **Demo:** [ordexa-sys.vercel.app](https://ordexa-sys.vercel.app)
-- **Repositório:** [lovable-orders](https://github.com/seu-usuario/lovable-orders) — React 18 + TypeScript + Tailwind
-
