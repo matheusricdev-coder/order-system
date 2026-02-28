@@ -183,4 +183,9 @@ final class InMemoryOrderRepository implements OrderRepository
     {
         throw new DomainException('Not used in this test');
     }
+
+    public function findByPaymentIntentId(string $intentId): Order
+    {
+        throw new DomainException('Not used in this test');
+    }
 }

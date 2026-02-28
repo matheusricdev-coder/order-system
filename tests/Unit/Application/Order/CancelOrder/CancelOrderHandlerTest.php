@@ -125,6 +125,11 @@ final class InMemoryOrderRepository implements OrderRepository
         $this->forUpdateLookups[] = $id;
         return $this->order;
     }
+
+    public function findByPaymentIntentId(string $intentId): Order
+    {
+        throw new DomainException('findByPaymentIntentId not used in this test');
+    }
 }
 
 final class InMemoryStockRepository implements StockRepository
