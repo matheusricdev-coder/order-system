@@ -282,36 +282,6 @@ const Product = () => {
                 </div>
               </div>
 
-              {/* Description */}
-              {product.description && (
-                <div className="border-t border-border pt-4">
-                  <h2 className="text-sm font-semibold text-foreground mb-2">Descrição</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {product.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Quantity selector */}
-              <div className="border-t border-border pt-4">
-                <h2 className="text-sm font-semibold text-foreground mb-3">Quantidade</h2>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="w-10 text-center font-semibold text-foreground">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity((q) => q + 1)}
-                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
               <div className="flex gap-2">
                 <Button
                   className="flex-1 gap-2 bg-brand hover:bg-brand-hover text-primary-foreground"
