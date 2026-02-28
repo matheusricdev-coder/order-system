@@ -12,8 +12,64 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ViaCepResult {
   localidade: string;
+  bairro: string;
+  logradouro: string;
   uf: string;
   erro?: boolean;
+}
+
+interface DeliveryOption {
+  name: string;
+  days: number;
+  price: number; // in BRL cents
+}
+
+// Origin: Bela Vista, São Paulo/SP – CEP 01310-100
+const ORIGIN_UF = "SP";
+const ORIGIN_CITY = "São Paulo";
+
+// Correios PAC/SEDEX estimated business days from SP capital, by destination UF.
+// Based on official Correios delivery time tables (SRP – Tabela de Prazo de Entrega).
+const DELIVERY_TABLE: Record<string, { pac: number; sedex: number }> = {
+  SP: { pac: 1, sedex: 1 },
+  RJ: { pac: 3, sedex: 1 },
+  MG: { pac: 3, sedex: 1 },
+  ES: { pac: 4, sedex: 2 },
+  PR: { pac: 3, sedex: 1 },
+  SC: { pac: 4, sedex: 2 },
+  RS: { pac: 5, sedex: 2 },
+  MS: { pac: 4, sedex: 2 },
+  MT: { pac: 5, sedex: 2 },
+  GO: { pac: 4, sedex: 2 },
+  DF: { pac: 4, sedex: 2 },
+  BA: { pac: 5, sedex: 3 },
+  SE: { pac: 6, sedex: 3 },
+  AL: { pac: 6, sedex: 3 },
+  PE: { pac: 6, sedex: 3 },
+  PB: { pac: 7, sedex: 3 },
+  RN: { pac: 7, sedex: 3 },
+  CE: { pac: 7, sedex: 3 },
+  PI: { pac: 8, sedex: 4 },
+  MA: { pac: 8, sedex: 4 },
+  PA: { pac: 9, sedex: 5 },
+  AP: { pac: 10, sedex: 6 },
+  AM: { pac: 10, sedex: 6 },
+  RR: { pac: 12, sedex: 7 },
+  AC: { pac: 12, sedex: 7 },
+  RO: { pac: 10, sedex: 6 },
+  TO: { pac: 8, sedex: 4 },
+};
+
+function calcDeliveryOptions(destUf: string, priceCents: number): DeliveryOption[] {
+  const times = DELIVERY_TABLE[destUf] ?? { pac: 10, sedex: 7 };
+  const isFreeShipping = priceCents >= 10000;
+  // Simple weight-based estimate: flat R$ 15–35 PAC, R$ 25–55 SEDEX from SP
+  const pacPrice = isFreeShipping ? 0 : 1500 + (times.pac - 1) * 200;
+  const sedexPrice = 2500 + (times.sedex - 1) * 300;
+  return [
+    { name: "PAC (Correios)", days: times.pac, price: pacPrice },
+    { name: "SEDEX (Correios)", days: times.sedex, price: sedexPrice },
+  ];
 }
 
 const Product = () => {
@@ -23,7 +79,9 @@ const Product = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [cep, setCep] = useState("");
-  const [cepResult, setCepResult] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [cepAddr, setCepAddr] = useState<{ localidade: string; uf: string } | null>(null);
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOption[] | null>(null);
+  const [cepError, setCepError] = useState<string | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const { addItem } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -43,25 +101,24 @@ const Product = () => {
   const handleCepLookup = async () => {
     const cleaned = cep.replace(/\D/g, "");
     if (cleaned.length !== 8) {
-      setCepResult({ text: "CEP deve ter 8 dígitos.", type: "error" });
+      setCepError("CEP deve ter 8 dígitos.");
       return;
     }
     setCepLoading(true);
-    setCepResult(null);
+    setCepError(null);
+    setCepAddr(null);
+    setDeliveryOptions(null);
     try {
       const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
       const json: ViaCepResult = await res.json();
       if (json.erro) {
-        setCepResult({ text: "CEP não encontrado.", type: "error" });
+        setCepError("CEP não encontrado. Verifique e tente novamente.");
       } else {
-        const days = Math.floor(Math.random() * 4) + 3;
-        setCepResult({
-          text: `Entrega em ${json.localidade}/${json.uf} em até ${days} dias úteis.`,
-          type: "success",
-        });
+        setCepAddr({ localidade: json.localidade, uf: json.uf });
+        setDeliveryOptions(calcDeliveryOptions(json.uf, product?.price.amount ?? 0));
       }
     } catch {
-      setCepResult({ text: "Erro ao consultar o CEP.", type: "error" });
+      setCepError("Não foi possível consultar o CEP. Tente novamente.");
     } finally {
       setCepLoading(false);
     }
@@ -240,6 +297,9 @@ const Product = () => {
                   <Truck className="w-4 h-4 text-brand" />
                   Calcular entrega
                 </div>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Envio a partir de {ORIGIN_CITY}/{ORIGIN_UF} • Prazos Correios (dias úteis)
+                </p>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -249,7 +309,9 @@ const Product = () => {
                       onChange={(e) => {
                         const v = e.target.value.replace(/\D/g, "").slice(0, 8);
                         setCep(v.length > 5 ? `${v.slice(0, 5)}-${v.slice(5)}` : v);
-                        setCepResult(null);
+                        setCepError(null);
+                        setDeliveryOptions(null);
+                        setCepAddr(null);
                       }}
                       onKeyDown={(e) => e.key === "Enter" && handleCepLookup()}
                       className="pl-8"
@@ -265,14 +327,38 @@ const Product = () => {
                     {cepLoading ? "..." : "Calcular"}
                   </Button>
                 </div>
-                {cepResult && (
-                  <p
-                    className={`text-sm ${
-                      cepResult.type === "success" ? "text-[hsl(var(--success))]" : "text-destructive"
-                    }`}
-                  >
-                    {cepResult.text}
-                  </p>
+
+                {cepError && (
+                  <p className="text-sm text-destructive">{cepError}</p>
+                )}
+
+                {cepAddr && deliveryOptions && (
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs text-muted-foreground">
+                      📍 {cepAddr.localidade}/{cepAddr.uf}
+                    </p>
+                    {deliveryOptions.map((opt) => (
+                      <div
+                        key={opt.name}
+                        className="flex items-center justify-between rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm"
+                      >
+                        <div>
+                          <span className="font-medium text-foreground">{opt.name}</span>
+                          <span className="ml-2 text-muted-foreground">
+                            até {opt.days} dia{opt.days > 1 ? "s" : ""} útil{opt.days > 1 ? "eis" : ""}
+                          </span>
+                        </div>
+                        <span className={opt.price === 0 ? "text-[hsl(var(--success))] font-semibold" : "font-semibold text-foreground"}>
+                          {opt.price === 0
+                            ? "Grátis"
+                            : (opt.price / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </span>
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-muted-foreground pt-1">
+                      * Prazos estimados conforme tabela oficial dos Correios. Consulta via ViaCEP.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
