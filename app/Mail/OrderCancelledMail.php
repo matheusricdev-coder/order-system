@@ -18,7 +18,7 @@ final class OrderCancelledMail extends Mailable implements ShouldQueue
     use SerializesModels;
 
     public function __construct(
-        public readonly OrderDTO $order,
+        private readonly OrderDTO $order,
     ) {}
 
     public function envelope(): Envelope

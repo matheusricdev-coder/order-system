@@ -64,20 +64,21 @@ final class OrderTest extends TestCase
         self::assertSame('BRL', $total->currency());
     }
 
-    public function test_can_be_paid_only_when_created(): void
+    public function test_can_be_paid_only_when_payment_pending(): void
     {
-        $order = new Order(id: 'o1', userId: 'u1');
+        $created = new Order(id: 'o1', userId: 'u1');
+        self::assertFalse($created->canBePaid(), 'CREATED cannot go directly to PAID');
 
-        self::assertTrue($order->canBePaid());
+        $pending = Order::reconstitute(id: 'o1', userId: 'u1', status: OrderStatus::PAYMENT_PENDING, items: []);
+        self::assertTrue($pending->canBePaid(), 'PAYMENT_PENDING can transition to PAID');
 
-        $order->markAsPaid();
-
-        self::assertFalse($order->canBePaid());
+        $paid = Order::reconstitute(id: 'o1', userId: 'u1', status: OrderStatus::PAID, items: []);
+        self::assertFalse($paid->canBePaid(), 'PAID is terminal');
     }
 
     public function test_mark_as_paid_changes_status(): void
     {
-        $order = new Order(id: 'o1', userId: 'u1');
+        $order = Order::reconstitute(id: 'o1', userId: 'u1', status: OrderStatus::PAYMENT_PENDING, items: []);
 
         $order->markAsPaid();
 
@@ -86,7 +87,7 @@ final class OrderTest extends TestCase
 
     public function test_it_cannot_be_paid_twice(): void
     {
-        $order = new Order(id: 'o1', userId: 'u1');
+        $order = Order::reconstitute(id: 'o1', userId: 'u1', status: OrderStatus::PAYMENT_PENDING, items: []);
         $order->markAsPaid();
 
         $this->expectException(DomainException::class);
@@ -116,8 +117,7 @@ final class OrderTest extends TestCase
 
     public function test_it_cannot_be_cancelled_after_paid(): void
     {
-        $order = new Order(id: 'o1', userId: 'u1');
-        $order->markAsPaid();
+        $order = Order::reconstitute(id: 'o1', userId: 'u1', status: OrderStatus::PAID, items: []);
 
         $this->expectException(DomainException::class);
 

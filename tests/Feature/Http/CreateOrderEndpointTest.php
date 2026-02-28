@@ -8,11 +8,18 @@ use App\Models\ProductModel;
 use App\Models\StockModel;
 use App\Models\UserModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 final class CreateOrderEndpointTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Mail::fake();
+    }
 
     public function test_it_creates_order_and_returns_201_payload(): void
     {

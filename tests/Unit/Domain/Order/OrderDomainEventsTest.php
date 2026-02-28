@@ -36,7 +36,7 @@ final class OrderDomainEventsTest extends TestCase
 
     public function test_mark_as_paid_records_order_paid_event(): void
     {
-        $order = new Order('o-1', 'u-1');
+        $order = Order::reconstitute('o-1', 'u-1', OrderStatus::PAYMENT_PENDING, []);
         $order->markAsPaid();
 
         $events = $order->pullDomainEvents();
@@ -60,7 +60,7 @@ final class OrderDomainEventsTest extends TestCase
 
     public function test_pull_domain_events_clears_pending_events(): void
     {
-        $order = new Order('o-1', 'u-1');
+        $order = Order::reconstitute('o-1', 'u-1', OrderStatus::PAYMENT_PENDING, []);
         $order->markAsPaid();
 
         $order->pullDomainEvents(); // consume events

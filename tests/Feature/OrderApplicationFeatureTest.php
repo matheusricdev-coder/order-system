@@ -11,6 +11,7 @@ use App\Application\Order\PayOrder\PayOrderCommand;
 use App\Application\Order\PayOrder\PayOrderHandler;
 use App\Domain\Order\Order;
 use App\Domain\Order\OrderItem;
+use App\Domain\Order\OrderStatus;
 use App\Infrastructure\Persistence\EloquentOrderRepository;
 use App\Infrastructure\Persistence\EloquentStockRepository;
 use App\Models\CategoryModel;
@@ -100,9 +101,12 @@ final class OrderApplicationFeatureTest extends TestCase
 
     public function test_eloquent_repositories_keep_state_consistent_after_failed_pay_attempt(): void
     {
-        $order = new Order('o-1', 'u-1');
-        $order->addItem(new OrderItem('i-1', 'p-1', 2, new \App\Domain\Common\Money(1000, 'BRL')));
-        $order->markAsPaid();
+        $order = Order::reconstitute(
+            id:     'o-1',
+            userId: 'u-1',
+            status: OrderStatus::PAID,
+            items:  [new OrderItem('i-1', 'p-1', 2, new \App\Domain\Common\Money(1000, 'BRL'))],
+        );
 
         $orderRepository = new EloquentOrderRepository();
         $stockRepository = new EloquentStockRepository();

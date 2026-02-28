@@ -4,55 +4,50 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Application\Order\PayOrder;
 
-use App\Application\Common\DomainEventBus;
 use App\Application\Common\TransactionManager;
 use App\Application\Order\PayOrder\PayOrderCommand;
 use App\Application\Order\PayOrder\PayOrderHandler;
+use App\Application\Payment\PaymentGateway;
+use App\Application\Payment\PaymentIntentResult;
 use App\Application\Repositories\Order\OrderRepository;
-use App\Application\Repositories\Stock\StockRepository;
 use App\Domain\Common\Money;
 use App\Domain\Order\Order;
 use App\Domain\Order\OrderItem;
 use App\Domain\Order\OrderStatus;
-use App\Domain\Stock\Stock;
 use DomainException;
 use PHPUnit\Framework\TestCase;
 
 final class PayOrderHandlerTest extends TestCase
 {
-    public function test_it_pays_order_inside_transaction_and_locks_rows(): void
+    public function test_it_initiates_payment_inside_transaction_and_locks_rows(): void
     {
         $order = new Order('o-1', 'u-1');
         $order->addItem(new OrderItem('i-1', 'p-1', 2, new Money(1000, 'BRL')));
 
-        $stock = new Stock('s-1', 'p-1', 10);
-        $stock->reserve(2);
-
         $transactionManager = new TransactionManagerSpy();
-        $domainEventBus = new DomainEventBusSpy();
-        $orderRepository = new InMemoryOrderRepository($order);
-        $stockRepository = new InMemoryStockRepository($stock);
+        $orderRepository    = new InMemoryPayOrderRepository($order);
+        $gatewayResult      = new PaymentIntentResult('pi_test_123', 'secret_123');
+        $paymentGateway     = new FakePaymentGateway($gatewayResult);
 
-        $handler = new PayOrderHandler($orderRepository, $stockRepository, $transactionManager, $domainEventBus);
+        $handler = new PayOrderHandler($orderRepository, $paymentGateway, $transactionManager);
 
         $dto = $handler->handle(new PayOrderCommand(orderId: 'o-1', requesterId: 'u-1'));
 
         self::assertSame(1, $transactionManager->runCalls);
         self::assertSame(['o-1'], $orderRepository->forUpdateLookups);
-        self::assertSame(['p-1'], $stockRepository->forUpdateLookups);
-        self::assertSame('paid', $dto->status);
-        self::assertCount(1, $domainEventBus->publishedEvents);
+        self::assertTrue($paymentGateway->createIntentCalled);
+        self::assertSame('payment_pending', $dto->status);
+        self::assertSame('secret_123', $dto->clientSecret);
     }
 
-    public function test_it_rejects_order_that_cannot_be_paid(): void
+    public function test_it_rejects_order_that_cannot_initiate_payment(): void
     {
         $order = Order::reconstitute('o-1', 'u-1', OrderStatus::CANCELLED, []);
 
         $handler = new PayOrderHandler(
-            new InMemoryOrderRepository($order),
-            new InMemoryStockRepository(new Stock('s-1', 'p-1', 10)),
+            new InMemoryPayOrderRepository($order),
+            new FakePaymentGateway(new PaymentIntentResult('pi_x', 'secret_x')),
             new TransactionManagerSpy(),
-            new DomainEventBusSpy(),
         );
 
         $this->expectException(DomainException::class);
@@ -66,21 +61,39 @@ final class PayOrderHandlerTest extends TestCase
         $order = new Order('o-1', 'u-1');
         $order->addItem(new OrderItem('i-1', 'p-1', 1, new Money(1000, 'BRL')));
 
-        $stock = new Stock('s-1', 'p-1', 10);
-        $stock->reserve(1);
-
         $handler = new PayOrderHandler(
-            new InMemoryOrderRepository($order),
-            new InMemoryStockRepository($stock),
+            new InMemoryPayOrderRepository($order),
+            new FakePaymentGateway(new PaymentIntentResult('pi_x', 'secret_x')),
             new TransactionManagerSpy(),
-            new DomainEventBusSpy(),
         );
 
         $this->expectException(DomainException::class);
 
         $handler->handle(new PayOrderCommand(orderId: 'o-1', requesterId: 'other-user'));
     }
+
+    public function test_gateway_is_not_called_when_transition_is_invalid(): void
+    {
+        $order   = Order::reconstitute('o-1', 'u-1', OrderStatus::PAID, []);
+        $gateway = new FakePaymentGateway(new PaymentIntentResult('pi_x', 'secret_x'));
+
+        $handler = new PayOrderHandler(
+            new InMemoryPayOrderRepository($order),
+            $gateway,
+            new TransactionManagerSpy(),
+        );
+
+        try {
+            $handler->handle(new PayOrderCommand(orderId: 'o-1', requesterId: 'u-1'));
+        } catch (DomainException) {
+            // expected
+        }
+
+        self::assertFalse($gateway->createIntentCalled, 'Stripe must not be called when transition is invalid');
+    }
 }
+
+// ──────────────────────────── Test doubles ────────────────────────────
 
 final class TransactionManagerSpy implements TransactionManager
 {
@@ -93,18 +106,20 @@ final class TransactionManagerSpy implements TransactionManager
     }
 }
 
-final class DomainEventBusSpy implements DomainEventBus
+final class FakePaymentGateway implements PaymentGateway
 {
-    /** @var object[] */
-    public array $publishedEvents = [];
+    public bool $createIntentCalled = false;
 
-    public function publish(array $events): void
+    public function __construct(private readonly PaymentIntentResult $result) {}
+
+    public function createIntent(string $orderId, Money $amount): PaymentIntentResult
     {
-        $this->publishedEvents = [...$this->publishedEvents, ...$events];
+        $this->createIntentCalled = true;
+        return $this->result;
     }
 }
 
-final class InMemoryOrderRepository implements OrderRepository
+final class InMemoryPayOrderRepository implements OrderRepository
 {
     /** @var string[] */
     public array $forUpdateLookups = [];
@@ -118,7 +133,7 @@ final class InMemoryOrderRepository implements OrderRepository
 
     public function findById(string $id): Order
     {
-        throw new DomainException('findById should not be used in write use case');
+        return $this->order;
     }
 
     public function findByIdForUpdate(string $id): Order
@@ -130,29 +145,5 @@ final class InMemoryOrderRepository implements OrderRepository
     public function findByPaymentIntentId(string $intentId): Order
     {
         throw new DomainException('findByPaymentIntentId not used in this test');
-    }
-}
-
-final class InMemoryStockRepository implements StockRepository
-{
-    /** @var string[] */
-    public array $forUpdateLookups = [];
-
-    public function __construct(private Stock $stock) {}
-
-    public function findByProductId(string $productId): Stock
-    {
-        throw new DomainException('findByProductId should not be used in write use case');
-    }
-
-    public function findByProductIdForUpdate(string $productId): Stock
-    {
-        $this->forUpdateLookups[] = $productId;
-        return $this->stock;
-    }
-
-    public function save(Stock $stock): void
-    {
-        $this->stock = $stock;
     }
 }

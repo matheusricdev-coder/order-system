@@ -10,11 +10,18 @@ use App\Models\ProductModel;
 use App\Models\StockModel;
 use App\Models\UserModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 final class CancelOrderEndpointTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Mail::fake();
+    }
 
     public function test_it_cancels_order_and_returns_payload(): void
     {

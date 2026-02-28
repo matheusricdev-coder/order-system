@@ -9,8 +9,8 @@ use App\Application\Repositories\Order\OrderRepository;
 use App\Domain\Order\Events\OrderCancelled;
 use App\Mail\OrderCancelledMail;
 use App\Models\UserModel;
+use Illuminate\Contracts\Mail\Mailer as MailerContract;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailer;
 use Illuminate\Support\Facades\Log;
 
 final class SendOrderCancelledEmail implements ShouldQueue
@@ -18,7 +18,7 @@ final class SendOrderCancelledEmail implements ShouldQueue
     public string $queue = 'emails';
 
     public function __construct(
-        private readonly Mailer $mailer,
+        private readonly MailerContract $mailer,
         private readonly OrderRepository $orderRepository,
     ) {}
 

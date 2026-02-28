@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Http;
 
+use App\Application\Payment\PaymentGateway;
+use App\Application\Payment\PaymentIntentResult;
 use App\Models\OrderItemModel;
 use App\Models\OrderModel;
 use App\Models\ProductModel;
@@ -15,6 +17,20 @@ use Tests\TestCase;
 final class PayOrderEndpointTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $mock = $this->createMock(PaymentGateway::class);
+        $mock->method('createIntent')->willReturn(
+            new PaymentIntentResult(
+                intentId:     'pi_test_fake_intent',
+                clientSecret: 'pi_test_fake_secret',
+            )
+        );
+        $this->app->instance(PaymentGateway::class, $mock);
+    }
 
     public function test_it_pays_order_and_returns_payload(): void
     {
@@ -29,7 +45,7 @@ final class PayOrderEndpointTest extends TestCase
             ->assertOk()
             ->assertHeader('X-Correlation-Id')
             ->assertJsonPath('data.id', $orderId)
-            ->assertJsonPath('data.status', 'paid');
+            ->assertJsonPath('data.status', 'payment_pending');
     }
 
     public function test_it_returns_401_without_auth_token(): void

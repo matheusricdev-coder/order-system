@@ -9,6 +9,7 @@ use App\Application\Order\DTO\OrderDTO;
 use App\Application\Payment\PaymentGateway;
 use App\Application\Payment\PaymentIntentResult;
 use App\Application\Repositories\Order\OrderRepository;
+use App\Domain\Order\Exceptions\InvalidOrderTransitionException;
 use App\Domain\Order\Exceptions\UnauthorizedOrderException;
 
 /**
@@ -42,6 +43,9 @@ final class PayOrderHandler
 
         if (!$order->ownedBy($command->requesterId)) {
             throw UnauthorizedOrderException::notOwner($command->orderId);
+        }
+        if (!$order->canInitiatePayment()) {
+            throw InvalidOrderTransitionException::cannotBePaid($order->status()->value);
         }
 
         // Step 2 — create PaymentIntent (external call, no DB lock held)

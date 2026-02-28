@@ -9,9 +9,24 @@ use PHPUnit\Framework\TestCase;
 
 final class OrderStatusTest extends TestCase
 {
-    public function test_created_can_transition_to_paid(): void
+    public function test_created_can_transition_to_payment_pending(): void
     {
-        self::assertTrue(OrderStatus::CREATED->canTransitionTo(OrderStatus::PAID));
+        self::assertTrue(OrderStatus::CREATED->canTransitionTo(OrderStatus::PAYMENT_PENDING));
+    }
+
+    public function test_created_cannot_transition_to_paid_directly(): void
+    {
+        self::assertFalse(OrderStatus::CREATED->canTransitionTo(OrderStatus::PAID));
+    }
+
+    public function test_payment_pending_can_transition_to_paid(): void
+    {
+        self::assertTrue(OrderStatus::PAYMENT_PENDING->canTransitionTo(OrderStatus::PAID));
+    }
+
+    public function test_payment_pending_can_transition_to_cancelled(): void
+    {
+        self::assertTrue(OrderStatus::PAYMENT_PENDING->canTransitionTo(OrderStatus::CANCELLED));
     }
 
     public function test_created_can_transition_to_cancelled(): void
