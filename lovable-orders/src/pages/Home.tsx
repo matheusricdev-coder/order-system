@@ -48,7 +48,7 @@ const Home = () => {
   const { data: streakRes } = useLoginStreak(isAuthenticated);
 
   const categories = categoriesRes?.data ?? [];
-  const products   = productsRes?.data ?? [];
+  const products   = (productsRes?.data ?? []).filter((p) => p.images.length > 0);
   const loginDays: boolean[] = streakRes?.data?.weekDays ?? Array(7).fill(false);
   const totalCoins: number   = streakRes?.data?.totalCoins ?? 0;
 

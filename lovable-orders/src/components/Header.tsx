@@ -1,9 +1,10 @@
-import { ShoppingCart, User, Menu, LogOut, Package, LayoutDashboard } from "lucide-react";
+import { ShoppingCart, User, Menu, LogOut, Package, LayoutDashboard, Heart } from "lucide-react";
 import SearchBar from "./SearchBar";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 interface HeaderProps {
   coinBalance?: number;
@@ -15,6 +16,7 @@ const Header = ({ coinBalance = 0, onSearch }: HeaderProps) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { totalItems, openCart } = useCart();
+  const { items: favoriteItems } = useFavorites();
 
   const handleSearch = (q: string) => {
     setSearchQuery(q);
@@ -93,6 +95,21 @@ const Header = ({ coinBalance = 0, onSearch }: HeaderProps) => {
                 <User className="w-6 h-6 text-primary-foreground" />
               </button>
             )}
+
+            <Link
+              to="/favorites"
+              className="p-2 hover:bg-brand-hover rounded-lg transition-colors relative"
+              title="Meus favoritos"
+            >
+              <Heart
+                className={`w-6 h-6 text-primary-foreground ${favoriteItems.length > 0 ? "fill-primary-foreground/40" : ""}`}
+              />
+              {favoriteItems.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-destructive text-destructive-foreground text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                  {favoriteItems.length > 99 ? "99+" : favoriteItems.length}
+                </span>
+              )}
+            </Link>
 
             <button
               className="p-2 hover:bg-brand-hover rounded-lg transition-colors relative"

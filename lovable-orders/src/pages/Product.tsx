@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ImageOff, ShoppingCart, Tag, Building2, Minus, Plus, MapPin, Truck } from "lucide-react";
+import { ArrowLeft, ImageOff, ShoppingCart, Tag, Building2, Minus, Plus, MapPin, Truck, Heart } from "lucide-react";
 import Header from "@/components/Header";
 import { useProduct } from "@/hooks/useCatalog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface ViaCepResult {
@@ -25,6 +26,7 @@ const Product = () => {
   const [cepResult, setCepResult] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [cepLoading, setCepLoading] = useState(false);
   const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { toast } = useToast();
 
   const product = data?.data;
@@ -203,14 +205,34 @@ const Product = () => {
                 </div>
               </div>
 
-              <Button
-                className="w-full gap-2 bg-brand hover:bg-brand-hover text-primary-foreground"
-                size="lg"
-                onClick={handleAddToCart}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                Adicionar ao carrinho
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 gap-2 bg-brand hover:bg-brand-hover text-primary-foreground"
+                  size="lg"
+                  onClick={handleAddToCart}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  Adicionar ao carrinho
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className={`px-4 ${isFavorite(product.id) ? "border-destructive text-destructive" : ""}`}
+                  onClick={() =>
+                    toggleFavorite({
+                      productId: product.id,
+                      name: product.name,
+                      priceAmount: product.price.amount,
+                      images: product.images,
+                    })
+                  }
+                  title={isFavorite(product.id) ? "Remover dos favoritos" : "Favoritar"}
+                >
+                  <Heart
+                    className={`w-5 h-5 ${isFavorite(product.id) ? "fill-destructive text-destructive" : ""}`}
+                  />
+                </Button>
+              </div>
 
               {/* CEP delivery estimator */}
               <div className="border border-border rounded-xl p-4 space-y-3">
