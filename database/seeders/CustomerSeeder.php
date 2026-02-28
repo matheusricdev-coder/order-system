@@ -20,7 +20,7 @@ class CustomerSeeder extends Seeder
                 'name'       => 'Cliente',
                 'surname'    => 'Teste',
                 'birth_date' => '1995-06-15',
-                'password'   => Hash::make('Customer2026'),
+                'password'   => Hash::make((string) env('CUSTOMER_SEEDER_PASSWORD', 'Customer2026!')),
                 'role'       => 'customer',
             ]
         );
