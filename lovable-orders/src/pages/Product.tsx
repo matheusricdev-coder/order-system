@@ -1,18 +1,29 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ImageOff, ShoppingCart, Tag, Building2 } from "lucide-react";
+import { ArrowLeft, ImageOff, ShoppingCart, Tag, Building2, Minus, Plus, MapPin, Truck } from "lucide-react";
 import Header from "@/components/Header";
 import { useProduct } from "@/hooks/useCatalog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+
+interface ViaCepResult {
+  localidade: string;
+  uf: string;
+  erro?: boolean;
+}
 
 const Product = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useProduct(id ?? "");
   const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [cep, setCep] = useState("");
+  const [cepResult, setCepResult] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [cepLoading, setCepLoading] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
 
@@ -20,13 +31,38 @@ const Product = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    addItem({
-      productId: product.id,
-      name: product.name,
-      priceAmount: product.price.amount,
-      images: product.images,
-    });
-    toast({ title: "Adicionado ao carrinho", description: product.name });
+    addItem(
+      { productId: product.id, name: product.name, priceAmount: product.price.amount, images: product.images },
+      quantity
+    );
+    toast({ title: `${quantity}x adicionado ao carrinho`, description: product.name });
+  };
+
+  const handleCepLookup = async () => {
+    const cleaned = cep.replace(/\D/g, "");
+    if (cleaned.length !== 8) {
+      setCepResult({ text: "CEP deve ter 8 dígitos.", type: "error" });
+      return;
+    }
+    setCepLoading(true);
+    setCepResult(null);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+      const json: ViaCepResult = await res.json();
+      if (json.erro) {
+        setCepResult({ text: "CEP não encontrado.", type: "error" });
+      } else {
+        const days = Math.floor(Math.random() * 4) + 3;
+        setCepResult({
+          text: `Entrega em ${json.localidade}/${json.uf} em até ${days} dias úteis.`,
+          type: "success",
+        });
+      }
+    } catch {
+      setCepResult({ text: "Erro ao consultar o CEP.", type: "error" });
+    } finally {
+      setCepLoading(false);
+    }
   };
 
   const formatPrice = (amount: number) =>
@@ -109,7 +145,7 @@ const Product = () => {
             </div>
 
             {/* Info */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
                 <h1 className="text-2xl font-bold text-foreground leading-tight mb-3">
                   {product.name}
@@ -137,6 +173,36 @@ const Product = () => {
                 )}
               </div>
 
+              {/* Description */}
+              {product.description && (
+                <div className="border-t border-border pt-4">
+                  <h2 className="text-sm font-semibold text-foreground mb-2">Descrição</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {product.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Quantity selector */}
+              <div className="border-t border-border pt-4">
+                <h2 className="text-sm font-semibold text-foreground mb-3">Quantidade</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-10 text-center font-semibold text-foreground">{quantity}</span>
+                  <button
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               <Button
                 className="w-full gap-2 bg-brand hover:bg-brand-hover text-primary-foreground"
                 size="lg"
@@ -145,6 +211,48 @@ const Product = () => {
                 <ShoppingCart className="w-5 h-5" />
                 Adicionar ao carrinho
               </Button>
+
+              {/* CEP delivery estimator */}
+              <div className="border border-border rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Truck className="w-4 h-4 text-brand" />
+                  Calcular entrega
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="00000-000"
+                      value={cep}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "").slice(0, 8);
+                        setCep(v.length > 5 ? `${v.slice(0, 5)}-${v.slice(5)}` : v);
+                        setCepResult(null);
+                      }}
+                      onKeyDown={(e) => e.key === "Enter" && handleCepLookup()}
+                      className="pl-8"
+                      maxLength={9}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleCepLookup}
+                    disabled={cepLoading}
+                    className="shrink-0"
+                  >
+                    {cepLoading ? "..." : "Calcular"}
+                  </Button>
+                </div>
+                {cepResult && (
+                  <p
+                    className={`text-sm ${
+                      cepResult.type === "success" ? "text-[hsl(var(--success))]" : "text-destructive"
+                    }`}
+                  >
+                    {cepResult.text}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}

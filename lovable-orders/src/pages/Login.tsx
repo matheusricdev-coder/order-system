@@ -35,7 +35,7 @@ const Login = () => {
     setIsLoading(true);
     try {
       await login(loginData.email, loginData.password);
-      toast({ title: "Login realizado!", description: "Bem-vindo de volta ao MarketPlace" });
+      toast({ title: "Login realizado!", description: "Bem-vindo de volta ao TudoAKI" });
       navigate("/");
     } catch (err) {
       const message =
@@ -66,7 +66,7 @@ const Login = () => {
         password: signupData.password,
         password_confirmation: signupData.confirmPassword,
       });
-      toast({ title: "Conta criada!", description: "Seja bem-vindo ao MarketPlace" });
+      toast({ title: "Conta criada!", description: "Seja bem-vindo ao TudoAKI" });
       navigate("/");
     } catch (err) {
       let description = "Erro ao criar conta. Tente novamente.";
@@ -96,7 +96,7 @@ const Login = () => {
             >
               <ArrowLeft className="w-6 h-6 text-primary-foreground" />
             </Link>
-            <h1 className="text-xl font-bold text-primary-foreground">MarketPlace</h1>
+            <h1 className="text-xl font-bold text-primary-foreground">TudoAKI</h1>
           </div>
         </div>
       </div>

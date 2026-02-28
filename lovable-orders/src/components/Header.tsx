@@ -36,7 +36,7 @@ const Header = ({ coinBalance = 0, onSearch }: HeaderProps) => {
           
           <Link to="/" className="flex-shrink-0">
             <h1 className="text-xl font-bold text-primary-foreground tracking-tight">
-              MarketPlace
+              TudoAKI
             </h1>
           </Link>
 
