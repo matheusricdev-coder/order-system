@@ -11,16 +11,17 @@ interface ProductCardProps {
   originalPrice?: number;
   images?: string[];
   freeShipping?: boolean;
+  discountPercentage?: number;
 }
 
-const ProductCard = ({ id, title, price, originalPrice, images = [], freeShipping }: ProductCardProps) => {
+const ProductCard = ({ id, title, price, originalPrice, images = [], freeShipping, discountPercentage }: ProductCardProps) => {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
   const coverImage = images.length > 0 ? images[0] : null;
   const favorited = isFavorite(id);
-  const discount = originalPrice 
-    ? Math.round(((originalPrice - price) / originalPrice) * 100) 
-    : 0;
+  // Use the real promotion percentage if available, else compute from prices
+  const discount = discountPercentage
+    ?? (originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
 
   const formatPrice = (value: number) => {
     return value.toLocaleString('pt-BR', {

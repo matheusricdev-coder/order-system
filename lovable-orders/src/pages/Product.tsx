@@ -91,8 +91,9 @@ const Product = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const priceAmount = product.promotion?.discountedAmount ?? product.price.amount;
     addItem(
-      { productId: product.id, name: product.name, priceAmount: product.price.amount, images: product.images },
+      { productId: product.id, name: product.name, priceAmount, images: product.images },
       quantity
     );
     toast({ title: `${quantity}x adicionado ao carrinho`, description: product.name });
@@ -209,9 +210,28 @@ const Product = () => {
                 <h1 className="text-2xl font-bold text-foreground leading-tight mb-3">
                   {product.name}
                 </h1>
-                <p className="text-3xl font-bold text-price">
-                  {formatPrice(product.price.amount)}
-                </p>
+                {product.promotion ? (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-3xl font-bold text-price">
+                        {formatPrice(product.promotion.discountedAmount)}
+                      </span>
+                      <span className="bg-success text-success-foreground text-sm font-bold px-2 py-0.5 rounded">
+                        -{product.promotion.discountPercentage}%
+                      </span>
+                    </div>
+                    <p className="text-discount text-base">
+                      De: {formatPrice(product.promotion.originalAmount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      ⏰ Oferta válida até {new Date(product.promotion.endsAt).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-3xl font-bold text-price">
+                    {formatPrice(product.price.amount)}
+                  </p>
+                )}
                 {product.price.amount >= 10000 && (
                   <p className="badge-free-shipping mt-1">Frete grátis</p>
                 )}

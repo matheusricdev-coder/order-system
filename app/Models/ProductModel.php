@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class ProductModel extends Model
 {
@@ -37,5 +38,15 @@ final class ProductModel extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(CompanyModel::class, 'company_id');
+    }
+
+    /** Returns the currently active promotion (if any). */
+    public function activePromotion(): HasOne
+    {
+        return $this->hasOne(ProductPromotionModel::class, 'product_id')
+            ->where('is_active', true)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now())
+            ->latest('starts_at');
     }
 }

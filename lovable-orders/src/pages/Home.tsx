@@ -31,6 +31,7 @@ const Home = () => {
   const [minPriceBRL, setMinPriceBRL]           = useState("");
   const [maxPriceBRL, setMaxPriceBRL]           = useState("");
   const [sortIndex, setSortIndex]               = useState(0);
+  const [onlyWithPromotion, setOnlyWithPromotion] = useState(false);
   const { isAuthenticated } = useAuth();
 
   const { data: categoriesRes } = useCategories();
@@ -44,6 +45,7 @@ const Home = () => {
     sortBy:   sortOpt.sortBy,
     sortDir:  sortOpt.sortDir,
     perPage: 12,
+    onlyWithPromotion: onlyWithPromotion || undefined,
   });
   const { data: streakRes } = useLoginStreak(isAuthenticated);
 
@@ -108,7 +110,13 @@ const Home = () => {
         <div className="bg-gradient-to-r from-brand to-brand-hover rounded-xl p-6 text-primary-foreground animate-fade-in">
           <h2 className="text-2xl font-bold mb-2">🔥 Super Ofertas</h2>
           <p className="text-primary-foreground/80 mb-4">Até 50% de desconto em produtos selecionados</p>
-          <button className="bg-primary-foreground text-brand px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+          <button
+            className="bg-primary-foreground text-brand px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            onClick={() => {
+              setOnlyWithPromotion(true);
+              setSelectedCategory(undefined);
+            }}
+          >
             Ver ofertas
           </button>
         </div>
@@ -174,9 +182,19 @@ const Home = () => {
       {/* Products Grid */}
       <div className="container pb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">
-            {selectedCategory ? "Produtos filtrados" : "Produtos em destaque"}
-          </h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-bold text-foreground">
+              {onlyWithPromotion ? "🔥 Produtos em oferta" : selectedCategory ? "Produtos filtrados" : "Produtos em destaque"}
+            </h2>
+            {onlyWithPromotion && (
+              <button
+                onClick={() => setOnlyWithPromotion(false)}
+                className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full hover:bg-destructive/20 transition-colors"
+              >
+                Limpar filtro ✕
+              </button>
+            )}
+          </div>
           {productsRes?.meta && (
             <span className="text-sm text-muted-foreground">
               {productsRes.meta.total} produtos
@@ -205,9 +223,11 @@ const Home = () => {
                 <ProductCard
                   id={product.id}
                   title={product.name}
-                  price={product.price.amount / 100}
+                  price={product.promotion ? product.promotion.discountedAmount / 100 : product.price.amount / 100}
+                  originalPrice={product.promotion ? product.price.amount / 100 : undefined}
                   images={product.images}
                   freeShipping={product.price.amount >= 10000}
+                  discountPercentage={product.promotion?.discountPercentage}
                 />
               </div>
             ))}
