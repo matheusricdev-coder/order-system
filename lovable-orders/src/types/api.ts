@@ -31,6 +31,7 @@ export interface Money {
 export interface Product {
   id: string;
   name: string;
+  description?: string;
   categoryId: string;
   categoryName: string | null;
   companyId: string;
