@@ -18,6 +18,8 @@ final class ProductModel extends Model
     protected $fillable = [
         'id',
         'name',
+        'slug',
+        'description',
         'price_amount',
         'price_currency',
         'category_id',

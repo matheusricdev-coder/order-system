@@ -44,7 +44,7 @@ const App = () => (
               {/* ── Public ─────────────────────────────────────────────── */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/products/:id" element={<Product />} />
+              <Route path="/products/:slug" element={<Product />} />
               <Route path="/favorites" element={<Favorites />} />
 
               {/* ── Authenticated ───────────────────────────────────────── */}
@@ -57,7 +57,7 @@ const App = () => (
                 element={<ProtectedRoute><Orders /></ProtectedRoute>}
               />
               <Route
-                path="/orders/:id"
+                path="/orders/:orderNumber"
                 element={<ProtectedRoute><OrderDetail /></ProtectedRoute>}
               />
 

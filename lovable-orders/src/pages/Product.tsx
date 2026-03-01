@@ -73,9 +73,9 @@ function calcDeliveryOptions(destUf: string, priceCents: number): DeliveryOption
 }
 
 const Product = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useProduct(id ?? "");
+  const { data, isLoading, isError } = useProduct(slug ?? "");
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [cep, setCep] = useState("");
@@ -298,6 +298,7 @@ const Product = () => {
                   onClick={() =>
                     toggleFavorite({
                       productId: product.id,
+                      slug: product.slug,
                       name: product.name,
                       priceAmount: product.price.amount,
                       images: product.images,

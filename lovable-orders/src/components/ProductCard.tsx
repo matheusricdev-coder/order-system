@@ -6,6 +6,7 @@ const DEFAULT_IMAGE = "/placeholder-product.svg";
 
 interface ProductCardProps {
   id: string;
+  slug: string;
   title: string;
   price: number;
   originalPrice?: number;
@@ -14,7 +15,7 @@ interface ProductCardProps {
   discountPercentage?: number;
 }
 
-const ProductCard = ({ id, title, price, originalPrice, images = [], freeShipping, discountPercentage }: ProductCardProps) => {
+const ProductCard = ({ id, slug, title, price, originalPrice, images = [], freeShipping, discountPercentage }: ProductCardProps) => {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
   const coverImage = images.length > 0 ? images[0] : null;
@@ -31,7 +32,7 @@ const ProductCard = ({ id, title, price, originalPrice, images = [], freeShippin
   };
 
   return (
-    <div className="product-card cursor-pointer group" onClick={() => navigate(`/products/${id}`)}>
+    <div className="product-card cursor-pointer group" onClick={() => navigate(`/products/${slug}`)}>
       <div className="relative aspect-square bg-card overflow-hidden">
         {coverImage ? (
           <img
@@ -54,7 +55,7 @@ const ProductCard = ({ id, title, price, originalPrice, images = [], freeShippin
           }`}
           onClick={(e) => {
             e.stopPropagation();
-            toggleFavorite({ productId: id, name: title, priceAmount: Math.round(price * 100), images });
+            toggleFavorite({ productId: id, slug, name: title, priceAmount: Math.round(price * 100), images });
           }}
           title={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
         >

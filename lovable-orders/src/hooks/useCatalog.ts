@@ -18,11 +18,11 @@ export function useProducts(filters: ProductFilters = {}) {
   });
 }
 
-export function useProduct(id: string) {
+export function useProduct(slug: string) {
   return useQuery({
-    queryKey: ['product', id],
-    queryFn: () => catalogApi.product(id),
-    enabled: Boolean(id),
+    queryKey: ['product', slug],
+    queryFn: () => catalogApi.product(slug),
+    enabled: Boolean(slug),
     staleTime: 1000 * 60 * 5,
   });
 }

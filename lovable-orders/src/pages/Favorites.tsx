@@ -61,7 +61,7 @@ const Favorites = () => {
                 >
                   <div
                     className="relative aspect-square bg-card overflow-hidden cursor-pointer"
-                    onClick={() => navigate(`/products/${item.productId}`)}
+                    onClick={() => navigate(`/products/${item.slug}`)}
                   >
                     {cover ? (
                       <img
@@ -89,7 +89,7 @@ const Favorites = () => {
                   <div className="p-3 space-y-2">
                     <p
                       className="text-sm text-foreground line-clamp-2 leading-tight cursor-pointer hover:underline"
-                      onClick={() => navigate(`/products/${item.productId}`)}
+                      onClick={() => navigate(`/products/${item.slug}`)}
                     >
                       {item.name}
                     </p>

@@ -36,7 +36,7 @@ function CheckoutForm({ order }: { order: Order }) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/orders/${order.id}?payment=success`,
+        return_url: `${window.location.origin}/orders/${order.orderNumber}?payment=success`,
       },
       redirect: 'if_required',
     });
@@ -50,7 +50,7 @@ function CheckoutForm({ order }: { order: Order }) {
     // Payment succeeded (no redirect needed — e.g. card payment)
     clearCart();
     toast.success('Pagamento realizado com sucesso!');
-    navigate(`/orders/${order.id}`);
+    navigate(`/orders/${order.orderNumber}`);
   };
 
   return (
@@ -128,7 +128,7 @@ export default function Checkout() {
         const createdOrder = createResponse.data;
 
         // 2. Initiate payment (gets client_secret from Stripe via backend)
-        const payResponse = await payOrder.mutateAsync(createdOrder.id);
+        const payResponse = await payOrder.mutateAsync(createdOrder.orderNumber);
         const payingOrder = payResponse.data;
 
         if (!payingOrder.clientSecret) {
@@ -194,7 +194,7 @@ export default function Checkout() {
                         cartItems.map((item) => ({ productId: item.productId, quantity: item.quantity })),
                       );
                       const createdOrder = createResponse.data;
-                      const payResponse = await payOrder.mutateAsync(createdOrder.id);
+                      const payResponse = await payOrder.mutateAsync(createdOrder.orderNumber);
                       const payingOrder = payResponse.data;
                       if (!payingOrder.clientSecret) throw new Error('Nenhum client secret retornado pelo servidor.');
                       setOrder(payingOrder);

@@ -17,6 +17,7 @@ use App\Application\Order\PayOrder\PayOrderHandler;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\CorrelationIdMiddleware;
 use App\Http\Requests\CreateOrderRequest;
+use App\Models\OrderModel;
 use App\Models\UserModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,9 +37,11 @@ final class OrderController extends Controller
             items: $payload['items'],
         ));
 
+        $orderNumber = (int) OrderModel::query()->where('id', $dto->id)->value('order_number');
+
         return response()->json(
             [
-                'data' => $dto->toArray(),
+                'data' => array_merge($dto->toArray(), ['orderNumber' => $orderNumber]),
                 'meta' => ['correlationId' => $this->correlationId($request)],
             ],
             201,
@@ -46,51 +49,54 @@ final class OrderController extends Controller
     }
 
     public function pay(
-        string $id,
+        int $orderNumber,
         Request $request,
         PayOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
+        $orderId  = $this->resolveOrderId($orderNumber);
 
         $dto = $handler->handle(new PayOrderCommand(
-            orderId: $id,
+            orderId: $orderId,
             requesterId: $authUser->id,
         ));
 
         return response()->json([
-            'data' => $dto->toArray(),
+            'data' => array_merge($dto->toArray(), ['orderNumber' => $orderNumber]),
             'meta' => ['correlationId' => $this->correlationId($request)],
         ]);
     }
 
     public function cancel(
-        string $id,
+        int $orderNumber,
         Request $request,
         CancelOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
+        $orderId  = $this->resolveOrderId($orderNumber);
 
         $dto = $handler->handle(new CancelOrderCommand(
-            orderId: $id,
+            orderId: $orderId,
             requesterId: $authUser->id,
         ));
 
         return response()->json([
-            'data' => $dto->toArray(),
+            'data' => array_merge($dto->toArray(), ['orderNumber' => $orderNumber]),
             'meta' => ['correlationId' => $this->correlationId($request)],
         ]);
     }
 
     public function show(
-        string $id,
+        int $orderNumber,
         Request $request,
         GetOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
+        $orderId  = $this->resolveOrderId($orderNumber);
 
         return response()->json([
             'data' => $handler->handle(new GetOrderQuery(
-                orderId: $id,
+                orderId: $orderId,
                 requesterId: $authUser->id,
             )),
             'meta' => ['correlationId' => $this->correlationId($request)],
@@ -133,6 +139,17 @@ final class OrderController extends Controller
                 'correlationId' => $this->correlationId($request),
             ],
         ]);
+    }
+
+    private function resolveOrderId(int $orderNumber): string
+    {
+        $id = OrderModel::query()->where('order_number', $orderNumber)->value('id');
+
+        if ($id === null) {
+            abort(404, "Order #{$orderNumber} not found.");
+        }
+
+        return (string) $id;
     }
 
     private function authUser(Request $request): UserModel

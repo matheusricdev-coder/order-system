@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 
 export interface FavoriteItem {
   productId: string;
+  slug: string;
   name: string;
   priceAmount: number; // in cents
   images: string[];

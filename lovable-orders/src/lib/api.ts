@@ -140,8 +140,8 @@ export const catalogApi = {
     return api.get<PaginatedResponse<Product>>(`/products${qs ? `?${qs}` : ''}`);
   },
 
-  product: (id: string) =>
-    api.get<{ data: Product }>(`/products/${id}`),
+  product: (slug: string) =>
+    api.get<{ data: Product }>(`/products/${slug}`),
 
   categories: () =>
     api.get<{ data: Category[] }>('/categories'),
@@ -164,14 +164,14 @@ export const ordersApi = {
     return api.get<PaginatedResponse<Order>>(`/orders${q ? `?${q}` : ''}`);
   },
 
-  get: (id: string) =>
-    api.get<{ data: Order }>(`/orders/${id}`),
+  get: (orderNumber: number) =>
+    api.get<{ data: Order }>(`/orders/${orderNumber}`),
 
-  pay: (id: string) =>
-    api.post<WriteResponse<Order>>(`/orders/${id}/pay`),
+  pay: (orderNumber: number) =>
+    api.post<WriteResponse<Order>>(`/orders/${orderNumber}/pay`),
 
-  cancel: (id: string) =>
-    api.post<WriteResponse<Order>>(`/orders/${id}/cancel`),
+  cancel: (orderNumber: number) =>
+    api.post<WriteResponse<Order>>(`/orders/${orderNumber}/cancel`),
 };
 
 // ── Admin endpoints ───────────────────────────────────────────────────────────

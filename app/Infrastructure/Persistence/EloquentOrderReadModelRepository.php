@@ -70,8 +70,9 @@ final class EloquentOrderReadModelRepository implements GetOrderReadModelReposit
         $currency = $order->items->first()?->unit_price_currency ?? 'BRL';
 
         return [
-            'id'        => $order->id,
-            'status'    => $order->status,
+            'id'          => $order->id,
+            'orderNumber' => $order->order_number,
+            'status'      => $order->status,
             'userId'    => $order->user_id,
             'items'     => $items,
             'total'     => ['amount' => $totalAmount, 'currency' => $currency],

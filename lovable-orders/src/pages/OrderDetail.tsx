@@ -13,9 +13,9 @@ const statusConfig: Record<OrderStatus, { label: string; variant: 'default' | 's
 };
 
 export default function OrderDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { orderNumber } = useParams<{ orderNumber: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useOrder(id ?? '');
+  const { data, isLoading, isError } = useOrder(orderNumber ? parseInt(orderNumber, 10) : null);
   const cancelOrder = useCancelOrder();
 
   const order = data?.data;
@@ -25,7 +25,7 @@ export default function OrderDetail() {
     if (!window.confirm('Tem certeza que deseja cancelar este pedido?')) return;
 
     try {
-      await cancelOrder.mutateAsync(order.id);
+      await cancelOrder.mutateAsync(order.orderNumber);
       toast.success('Pedido cancelado com sucesso.');
     } catch {
       toast.error('Não foi possível cancelar o pedido.');
@@ -68,7 +68,7 @@ export default function OrderDetail() {
           </button>
           <h1 className="text-xl font-bold">Pedido</h1>
           <span className="font-mono text-sm text-muted-foreground">
-            #{order.id.slice(0, 8).toUpperCase()}
+            #{order.orderNumber}
           </span>
         </div>
       </header>

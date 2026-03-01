@@ -73,9 +73,12 @@ final class CatalogController extends Controller
         ]);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(string $slug): JsonResponse
     {
-        $product = ProductModel::query()->with(['gallery', 'category', 'company', 'activePromotion'])->findOrFail($id);
+        $product = ProductModel::query()
+            ->with(['gallery', 'category', 'company', 'activePromotion'])
+            ->where('slug', $slug)
+            ->firstOrFail();
 
         return response()->json(['data' => $this->toProductDto($product)]);
     }
@@ -103,7 +106,9 @@ final class CatalogController extends Controller
 
         return [
             'id'           => $product->id,
+            'slug'         => $product->slug,
             'name'         => $product->name,
+            'description'  => $product->description ?? null,
             'categoryId'   => $product->category_id,
             'categoryName' => $product->relationLoaded('category') ? $product->category?->name : null,
             'companyId'    => $product->company_id,

@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\ProductModel;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Str;
 
 final class AdminProductController extends Controller
 {
@@ -46,10 +47,14 @@ final class AdminProductController extends Controller
     {
         $validated = $request->validated();
 
+        $id   = $this->uuid->generate();
+        $slug = Str::slug($validated['name']) . '-' . substr(str_replace('-', '', $id), 0, 6);
+
         /** @var ProductModel $product */
         $product = ProductModel::query()->create([
-            'id'             => $this->uuid->generate(),
+            'id'             => $id,
             'name'           => $validated['name'],
+            'slug'           => $slug,
             'description'    => $validated['description'] ?? null,
             'category_id'    => $validated['categoryId'],
             'company_id'     => $validated['companyId'],
@@ -67,13 +72,20 @@ final class AdminProductController extends Controller
 
         $validated = $request->validated();
 
-        $product->update(array_filter([
+        $updates = array_filter([
             'name'           => $validated['name'] ?? null,
             'description'    => $validated['description'] ?? null,
             'category_id'    => $validated['categoryId'] ?? null,
             'price_amount'   => isset($validated['priceAmount']) ? (int) $validated['priceAmount'] : null,
             'price_currency' => $validated['priceCurrency'] ?? null,
-        ], fn ($v) => $v !== null));
+        ], fn ($v) => $v !== null);
+
+        // Regenerate slug when name changes
+        if (isset($updates['name'])) {
+            $updates['slug'] = Str::slug($updates['name']) . '-' . substr(str_replace('-', '', $product->id), 0, 6);
+        }
+
+        $product->update($updates);
 
         $product->refresh();
 
@@ -92,6 +104,7 @@ final class AdminProductController extends Controller
     {
         return [
             'id'           => $p->id,
+            'slug'         => $p->slug,
             'name'         => $p->name,
             'description'  => $p->description ?? null,
             'categoryId'   => $p->category_id,

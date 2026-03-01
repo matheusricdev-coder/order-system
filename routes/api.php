@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 $apiV1 = static function (): void {
     // ── Public catalog ────────────────────────────────────────────────────
     Route::get('/products',                 [CatalogController::class, 'index']);
-    Route::get('/products/{id}',            [CatalogController::class, 'show']);
+    Route::get('/products/{slug}',          [CatalogController::class, 'show']);
     Route::get('/categories',               [CatalogController::class, 'categories']);
 
     Route::get('/companies/{id}',           [CompanyController::class, 'show']);
@@ -34,11 +34,11 @@ $apiV1 = static function (): void {
 
     // ── Orders (all require authentication) ───────────────────────────────
     Route::middleware('auth:sanctum')->group(static function (): void {
-        Route::post('/orders',                  [OrderController::class, 'create']);
-        Route::post('/orders/{id}/pay',         [OrderController::class, 'pay']);
-        Route::post('/orders/{id}/cancel',      [OrderController::class, 'cancel']);
-        Route::get('/orders/{id}',              [OrderController::class, 'show']);
-        Route::get('/orders',                   [OrderController::class, 'index']);
+        Route::post('/orders',                              [OrderController::class, 'create']);
+        Route::post('/orders/{orderNumber}/pay',            [OrderController::class, 'pay']);
+        Route::post('/orders/{orderNumber}/cancel',         [OrderController::class, 'cancel']);
+        Route::get('/orders/{orderNumber}',                 [OrderController::class, 'show']);
+        Route::get('/orders',                               [OrderController::class, 'index']);
     });
 };
 

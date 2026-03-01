@@ -64,13 +64,13 @@ export default function Orders() {
             return (
               <Link
                 key={order.id}
-                to={`/orders/${order.id}`}
+                to={`/orders/${order.orderNumber}`}
                 className="block bg-white rounded-xl border hover:border-indigo-400 transition-colors p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <p className="font-mono text-xs text-muted-foreground">
-                      #{order.id.slice(0, 8).toUpperCase()}
+                      Pedido #{order.orderNumber}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {order.items.length} {order.items.length === 1 ? 'item' : 'itens'}

@@ -222,6 +222,7 @@ const Home = () => {
               >
                 <ProductCard
                   id={product.id}
+                  slug={product.slug}
                   title={product.name}
                   price={product.promotion ? product.promotion.discountedAmount / 100 : product.price.amount / 100}
                   originalPrice={product.promotion ? product.price.amount / 100 : undefined}

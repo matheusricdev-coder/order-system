@@ -9,11 +9,11 @@ export function useOrders(params: { status?: string; page?: number } = {}) {
   });
 }
 
-export function useOrder(id: string) {
+export function useOrder(orderNumber: number | null) {
   return useQuery({
-    queryKey: ['order', id],
-    queryFn: () => ordersApi.get(id),
-    enabled: Boolean(id),
+    queryKey: ['order', orderNumber],
+    queryFn: () => ordersApi.get(orderNumber!),
+    enabled: orderNumber !== null && orderNumber > 0,
     staleTime: 0,
   });
 }
@@ -30,7 +30,7 @@ export function useCreateOrder() {
 export function usePayOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => ordersApi.pay(id),
+    mutationFn: (orderNumber: number) => ordersApi.pay(orderNumber),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 }
@@ -38,7 +38,7 @@ export function usePayOrder() {
 export function useCancelOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => ordersApi.cancel(id),
+    mutationFn: (orderNumber: number) => ordersApi.cancel(orderNumber),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['orders'] }),
   });
 }

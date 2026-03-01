@@ -30,6 +30,7 @@ export interface Money {
 
 export interface Product {
   id: string;
+  slug: string;
   name: string;
   description?: string;
   categoryId: string;
@@ -66,6 +67,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  orderNumber: number;
   userId: string;
   status: OrderStatus;
   total: Money;
