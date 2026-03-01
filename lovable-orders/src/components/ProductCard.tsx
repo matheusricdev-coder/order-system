@@ -32,7 +32,7 @@ const ProductCard = ({ id, slug, title, price, originalPrice, images = [], freeS
   };
 
   return (
-    <div className="product-card cursor-pointer group" onClick={() => navigate(`/products/${slug}`)}>
+    <div className="product-card cursor-pointer group" onClick={() => navigate(`/products/${slug || id}`)}>
       <div className="relative aspect-square bg-card overflow-hidden">
         {coverImage ? (
           <img

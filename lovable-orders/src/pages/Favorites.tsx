@@ -89,7 +89,7 @@ const Favorites = () => {
                   <div className="p-3 space-y-2">
                     <p
                       className="text-sm text-foreground line-clamp-2 leading-tight cursor-pointer hover:underline"
-                      onClick={() => navigate(`/products/${item.slug}`)}
+                      onClick={() => navigate(`/products/${item.slug || item.productId}`)}
                     >
                       {item.name}
                     </p>
