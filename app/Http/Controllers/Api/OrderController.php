@@ -19,6 +19,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\CorrelationIdMiddleware;
 use App\Http\Requests\CreateOrderRequest;
 use App\Models\OrderModel;
+use App\Models\ProductModel;
 use App\Models\UserModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,8 +63,38 @@ final class OrderController extends Controller
             requesterId: $authUser->id,
         ));
 
+        // Enrich order item DTOs with product names (single extra query)
+        $productIds = array_map(static fn ($i) => $i->productId, $dto->items);
+        $nameMap    = ProductModel::query()
+            ->whereIn('id', $productIds)
+            ->pluck('name', 'id')
+            ->all();
+
+        $enrichedItems = array_map(
+            static fn ($item) => isset($nameMap[$item->productId])
+                ? $item->withName((string) $nameMap[$item->productId])
+                : $item,
+            $dto->items,
+        );
+
+        $enrichedDto = new \App\Application\Order\DTO\OrderDTO(
+            id:                 $dto->id,
+            userId:             $dto->userId,
+            status:             $dto->status,
+            totalAmountInCents: $dto->totalAmountInCents,
+            currency:           $dto->currency,
+            items:              $enrichedItems,
+            paymentIntentId:    $dto->paymentIntentId,
+            clientSecret:       $dto->clientSecret,
+        );
+
+        // Load the human-readable order number for the frontend return_url
+        $orderNumberInt = (int) OrderModel::query()
+            ->where('id', $orderId)
+            ->value('order_number');
+
         return response()->json([
-            'data' => $dto->toArray(),
+            'data' => array_merge($enrichedDto->toArray(), ['orderNumber' => $orderNumberInt]),
             'meta' => ['correlationId' => $this->correlationId($request)],
         ]);
     }

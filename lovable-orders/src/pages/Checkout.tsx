@@ -24,7 +24,10 @@ function CheckoutForm({ order }: { order: Order }) {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
-  const { clearCart } = useCart();
+  const { clearCart, items: cartItems } = useCart();
+
+  // Build a productId → name map from cart so the summary never shows raw UUIDs
+  const cartNameMap = Object.fromEntries(cartItems.map((i) => [i.productId, i.name]));
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,7 +69,7 @@ function CheckoutForm({ order }: { order: Order }) {
         <div className="space-y-2 text-sm">
           {order.items.map((item) => (
             <div key={item.productId} className="flex justify-between">
-              <span>{item.name ?? item.productId} × {item.quantity}</span>
+              <span>{item.name ?? cartNameMap[item.productId] ?? item.productId} × {item.quantity}</span>
               <span>
                 {(item.unitPrice.amount * item.quantity / 100).toLocaleString('pt-BR', {
                   style: 'currency',

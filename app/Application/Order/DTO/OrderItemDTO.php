@@ -14,6 +14,7 @@ final class OrderItemDTO
         public readonly int $unitPriceAmount,
         public readonly string $unitPriceCurrency,
         public readonly int $totalPriceAmount,
+        public readonly ?string $name = null,
     ) {}
 
     public static function fromDomain(OrderItem $item): self
@@ -27,10 +28,23 @@ final class OrderItemDTO
         );
     }
 
+    public function withName(string $name): self
+    {
+        return new self(
+            productId:         $this->productId,
+            quantity:          $this->quantity,
+            unitPriceAmount:   $this->unitPriceAmount,
+            unitPriceCurrency: $this->unitPriceCurrency,
+            totalPriceAmount:  $this->totalPriceAmount,
+            name:              $name,
+        );
+    }
+
     public function toArray(): array
     {
         return [
             'productId'  => $this->productId,
+            'name'       => $this->name,
             'quantity'   => $this->quantity,
             'unitPrice'  => [
                 'amount'   => $this->unitPriceAmount,
