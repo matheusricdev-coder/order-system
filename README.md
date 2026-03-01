@@ -4,7 +4,7 @@ API de marketplace construída em **Laravel 12 + PHP 8.3** com foco em **qualida
 
 > Projeto de portfólio com abordagem profissional para demonstrar domínio de arquitetura, design de software e testes automatizados.
 
-> **Demo ao vivo:** [ordexa-sys.vercel.app](https://ordexa-sys.vercel.app) · Frontend: [lovable-orders](https://github.com/seu-usuario/lovable-orders)
+> **Demo ao vivo:** [tudoaki-sys.vercel.app](https://tudoaki-sys.vercel.app) · Frontend: [lovable-orders](https://github.com/seu-usuario/lovable-orders)
 
 ---
 
@@ -231,4 +231,4 @@ Outros arquivos de configuração presentes:
 
 Este projeto possui uma interface web completa integrada a esta API.
 
-- **Demo:** [ordexa-sys.vercel.app](https://ordexa-sys.vercel.app)
+- **Demo:** [tudoaki-sys.vercel.app](https://tudoaki-sys.vercel.app)

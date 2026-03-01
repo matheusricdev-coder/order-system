@@ -2,7 +2,7 @@
 
 Interface web moderna para um marketplace com autenticação, catálogo de produtos, carrinho persistente e criação de pedidos. Construída com foco em experiência de usuário, boas práticas de frontend e arquitetura escalável para integração com APIs reais.
 
-> **Demo ao vivo:** [ordexa-sys.vercel.app](https://ordexa-sys.vercel.app)
+> **Demo ao vivo:** [tudoaki-sys.vercel.app](https://tudoaki-sys.vercel.app)
 
 ## Visão Geral
 
@@ -154,4 +154,4 @@ Desenvolvido como projeto de portfolio para demonstrar capacidade em:
 
 ---
 
-*Projeto de portfólio — Backend: [ordem-system](https://github.com/seu-usuario/ordem-system) · Demo: [ordexa-sys.vercel.app](https://ordexa-sys.vercel.app)*
+*Projeto de portfólio — Backend: [ordem-system](https://github.com/seu-usuario/ordem-system) · Demo: [tudoaki-sys.vercel.app](https://tudoaki-sys.vercel.app)*
