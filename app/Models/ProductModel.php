@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 final class ProductModel extends Model
 {
@@ -25,6 +26,25 @@ final class ProductModel extends Model
         'category_id',
         'company_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $model): void {
+            if ($model->id === null || $model->id === '') {
+                $model->id = (string) Str::uuid();
+            }
+
+            if ($model->slug !== null && $model->slug !== '') {
+                return;
+            }
+
+            $base = Str::slug((string) $model->name);
+            $suffixSource = str_replace('-', '', (string) $model->id);
+            $suffix = substr($suffixSource, 0, 6);
+
+            $model->slug = "{$base}-{$suffix}";
+        });
+    }
 
     public function gallery(): HasMany
     {
