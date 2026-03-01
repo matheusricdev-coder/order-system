@@ -142,15 +142,24 @@ final class OrderController extends Controller
         ]);
     }
 
-    private function resolveOrderById(string $id): string
+    private function resolveOrderById(string $orderNumber): string
     {
-        $exists = OrderModel::query()->where('id', $id)->exists();
+        // The route parameter is the human-readable order_number (integer).
+        // Resolve it to the internal UUID used by all handlers.
+        $isUuid = (bool) preg_match(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i',
+            $orderNumber,
+        );
 
-        if (!$exists) {
-            throw OrderNotFoundException::withId($id);
+        $id = $isUuid
+            ? OrderModel::query()->where('id', $orderNumber)->value('id')
+            : OrderModel::query()->where('order_number', (int) $orderNumber)->value('id');
+
+        if ($id === null) {
+            throw OrderNotFoundException::withId($orderNumber);
         }
 
-        return $id;
+        return (string) $id;
     }
 
     private function authUser(Request $request): UserModel
