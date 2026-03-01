@@ -55,8 +55,7 @@ final class OrderController extends Controller
         PayOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
-        $orderNumberInt = $this->parseOrderNumber($orderNumber);
-        $orderId        = $this->resolveOrderId($orderNumberInt);
+        $orderId  = $this->resolveOrderById($orderNumber);
 
         $dto = $handler->handle(new PayOrderCommand(
             orderId: $orderId,
@@ -64,7 +63,7 @@ final class OrderController extends Controller
         ));
 
         return response()->json([
-            'data' => array_merge($dto->toArray(), ['orderNumber' => $orderNumberInt]),
+            'data' => $dto->toArray(),
             'meta' => ['correlationId' => $this->correlationId($request)],
         ]);
     }
@@ -75,8 +74,7 @@ final class OrderController extends Controller
         CancelOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
-        $orderNumberInt = $this->parseOrderNumber($orderNumber);
-        $orderId        = $this->resolveOrderId($orderNumberInt);
+        $orderId  = $this->resolveOrderById($orderNumber);
 
         $dto = $handler->handle(new CancelOrderCommand(
             orderId: $orderId,
@@ -84,7 +82,7 @@ final class OrderController extends Controller
         ));
 
         return response()->json([
-            'data' => array_merge($dto->toArray(), ['orderNumber' => $orderNumberInt]),
+            'data' => $dto->toArray(),
             'meta' => ['correlationId' => $this->correlationId($request)],
         ]);
     }
@@ -95,8 +93,7 @@ final class OrderController extends Controller
         GetOrderHandler $handler,
     ): JsonResponse {
         $authUser = $this->authUser($request);
-        $orderNumberInt = $this->parseOrderNumber($orderNumber);
-        $orderId        = $this->resolveOrderId($orderNumberInt);
+        $orderId  = $this->resolveOrderById($orderNumber);
 
         return response()->json([
             'data' => $handler->handle(new GetOrderQuery(
@@ -145,30 +142,15 @@ final class OrderController extends Controller
         ]);
     }
 
-    private function resolveOrderId(int $orderNumber): string
+    private function resolveOrderById(string $id): string
     {
-        $id = OrderModel::query()->where('order_number', $orderNumber)->value('id');
+        $exists = OrderModel::query()->where('id', $id)->exists();
 
-        if ($id === null) {
-            throw OrderNotFoundException::withId((string) $orderNumber);
+        if (!$exists) {
+            throw OrderNotFoundException::withId($id);
         }
 
-        return (string) $id;
-    }
-
-    private function parseOrderNumber(string $orderNumber): int
-    {
-        if (!ctype_digit($orderNumber)) {
-            throw OrderNotFoundException::withId($orderNumber);
-        }
-
-        $parsed = (int) $orderNumber;
-
-        if ($parsed <= 0) {
-            throw OrderNotFoundException::withId($orderNumber);
-        }
-
-        return $parsed;
+        return $id;
     }
 
     private function authUser(Request $request): UserModel
