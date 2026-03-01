@@ -75,10 +75,14 @@ final class CatalogController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $product = ProductModel::query()
-            ->with(['gallery', 'category', 'company', 'activePromotion'])
-            ->where('slug', $slug)
-            ->firstOrFail();
+        $query = ProductModel::query()
+            ->with(['gallery', 'category', 'company', 'activePromotion']);
+
+        // Accept both a friendly slug and a raw UUID (backwards-compat with old links).
+        $isUuid  = (bool) preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $slug);
+        $product = $isUuid
+            ? $query->where('id', $slug)->firstOrFail()
+            : $query->where('slug', $slug)->firstOrFail();
 
         return response()->json(['data' => $this->toProductDto($product)]);
     }

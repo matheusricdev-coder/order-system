@@ -268,17 +268,23 @@ final class ProductSeeder extends Seeder
         foreach (self::PRODUCTS as $product) {
             $images = $product['images'];
 
+            // Compute a deterministic slug — same algorithm used in ProductModel::booted() and slug migration
+            $slugBase   = Str::slug($product['name']);
+            $slugSuffix = substr(str_replace('-', '', $product['id']), 0, 6);
+            $slug       = "{$slugBase}-{$slugSuffix}";
+
             // Upsert product
             DB::table('products')->upsert([
                 'id'             => $product['id'],
                 'name'           => $product['name'],
+                'slug'           => $slug,
                 'price_amount'   => $product['price'],
                 'price_currency' => 'BRL',
                 'category_id'    => $product['category'],
                 'company_id'     => $product['company'],
                 'created_at'     => $now,
                 'updated_at'     => $now,
-            ], ['id'], ['name', 'price_amount', 'category_id', 'company_id', 'updated_at']);
+            ], ['id'], ['name', 'slug', 'price_amount', 'category_id', 'company_id', 'updated_at']);
 
             // Upsert stock — deterministic ID derived from product id
             $stockId = Str::uuid()->toString();
