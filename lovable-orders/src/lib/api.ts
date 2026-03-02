@@ -33,6 +33,10 @@ async function request<T>(
     'Content-Type': 'application/json',
     Accept: 'application/json',
   };
+  const apiKey = import.meta.env.VITE_API_KEY as string | undefined;
+  if (apiKey) {
+    headers['X-API-KEY'] = apiKey;
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;

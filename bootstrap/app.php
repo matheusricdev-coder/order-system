@@ -10,6 +10,7 @@ use App\Domain\User\Exceptions\InactiveUserException;
 use App\Domain\User\Exceptions\UserNotFoundException;
 use App\Http\Middleware\CorrelationIdMiddleware;
 use App\Http\Middleware\RequireAdminRole;
+use App\Http\Middleware\ValidateApiKey;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,7 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(CorrelationIdMiddleware::class);
-        $middleware->alias(['admin' => RequireAdminRole::class]);
+        $middleware->alias([
+            'admin'   => RequireAdminRole::class,
+            'api.key' => ValidateApiKey::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Throwable $e, Request $request): ?JsonResponse {

@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Internal API Key
+    |--------------------------------------------------------------------------
+    |
+    | Shared secret required in the X-API-KEY header for every request coming
+    | from the Vercel frontend. Blocks direct abuse of the public Fly.dev URL.
+    | Generate with: php artisan tinker --execute="echo Str::random(64);"
+    |
+    */
+
+    'internal_api_key' => env('INTERNAL_API_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

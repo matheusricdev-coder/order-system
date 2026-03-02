@@ -54,6 +54,9 @@ final class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', static function (Request $request): Limit {
             return Limit::perMinute(60)->by($request->ip());
         });
+        RateLimiter::for('auth', static function (Request $request): Limit {
+            return Limit::perMinute(10)->by($request->ip());
+        });
 
         // ── Domain event → queued email notifications ──────────────────────────
         Event::listen(OrderCreated::class, SendOrderCreatedEmail::class);

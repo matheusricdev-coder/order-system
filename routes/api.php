@@ -26,8 +26,10 @@ $apiV1 = static function (): void {
     Route::get('/products/{id}/stock',      [StockController::class, 'showByProduct']);
 
     // ── Auth ──────────────────────────────────────────────────────────────
-    Route::post('/auth/register',           [AuthController::class, 'register']);
-    Route::post('/auth/login',              [AuthController::class, 'login']);
+    Route::middleware('throttle:auth')->group(static function (): void {
+        Route::post('/auth/register', [AuthController::class, 'register']);
+        Route::post('/auth/login',    [AuthController::class, 'login']);
+    });
     Route::post('/auth/logout',             [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/me',                       [AuthController::class, 'me'])->middleware('auth:sanctum');
     Route::get('/me/login-streak',          [AuthController::class, 'loginStreak'])->middleware('auth:sanctum');
@@ -42,16 +44,16 @@ $apiV1 = static function (): void {
     });
 };
 
-Route::prefix('v1')->middleware('throttle:api')->group($apiV1);
+Route::prefix('v1')->middleware(['api.key', 'throttle:api'])->group($apiV1);
 
 // Backward-compatibility alias: routes without /v1 prefix are deprecated.
 // Planned removal: once all consumers have migrated to /api/v1.
 // @deprecated Use /api/v1/* instead.
-Route::middleware('throttle:api')->group($apiV1);
+Route::middleware(['api.key', 'throttle:api'])->group($apiV1);
 
 // ── Admin (requires authentication + admin role) ───────────────────────────
 Route::prefix('v1/admin')
-    ->middleware(['auth:sanctum', 'admin', 'throttle:api'])
+    ->middleware(['api.key', 'auth:sanctum', 'admin', 'throttle:api'])
     ->group(static function (): void {
         // Products CRUD
         Route::get('products',              [AdminProductController::class, 'index']);
